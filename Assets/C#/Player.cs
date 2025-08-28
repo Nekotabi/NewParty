@@ -1,8 +1,5 @@
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
-using Unity.Android.Gradle.Manifest;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 
 public class Player : MonoBehaviour
 {
@@ -16,32 +13,19 @@ public class Player : MonoBehaviour
     }
     private State state;
 
-    private enum MoveDir
-    {
-        Flont = 0,
-        FlontRight = 45,
-        Right = 90,
-        BackRight = 135,
-        Back = 180,
-        BackLeft = 225,
-        Left = 270,
-        FlontLeft = 315
-    }
-    private MoveDir moveDir;
-
     private Rigidbody rb;
     private Transform MyTrans;
     private Vector3 velocity;
     public float Speed;
-    private float MoveSpeed = 0.0f, RotateGoal = 0.0f;
+    private float MoveSpeed = 0.0f, RotateGoal = 0.0f, MyRot = 0.0f;
     private bool IsJump = false, IsDash = false;
-    private bool[] Moving = new bool[4] { false, false, false, false };//W, S, A, D
-
+    private bool[] Moving = new bool[4] { false, false, false, false };
     #endregion
 
     void Start()
     {
         MyTrans = this.transform;
+        MyRot = this.transform.rotation.y;
         rb = GetComponent<Rigidbody>();
     }
 
@@ -53,12 +37,12 @@ public class Player : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftShift))//ダッシュ判定
         {
             IsDash = true;
-            MoveSpeed = Speed * 1.30f;
+            MoveSpeed = Speed * 1.30f * Time.deltaTime;
         }
         else
         {
             IsDash = false;
-            MoveSpeed = Speed;
+            MoveSpeed = Speed * Time.deltaTime;
         }
 
         //前後左右
@@ -98,12 +82,11 @@ public class Player : MonoBehaviour
         }
 
         //移動処理
-        RotateCheck();
+        Debug.Log(RotateCheck());
         MyTrans.position += velocity;
 
         //アニメーション処理
         AnimCheck();
-        Debug.Log(state);
     }
 
     private void FixedUpdate()
@@ -129,26 +112,30 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void RotateCheck()
+    /// <summary>
+    /// 向きを返す。
+    /// </summary>
+    /// <param name="Movable"></param>
+    private int RotateCheck()
     {
-        if (Moving[0])
+        int RotateGoal = 0;
+        if (Moving[2])
+            RotateGoal -= 90;
+        if (Moving[3])
+            RotateGoal += 90;
+        if (!Moving[0] || !Moving[1])
         {
-            if (Moving[2])
-                moveDir = MoveDir.FlontLeft;
-            else if (Moving[3])
-                moveDir = MoveDir.FlontRight;
-            else
-                moveDir = MoveDir.Flont;
+            if (Moving[0])
+                RotateGoal /= 2;
+            if (Moving[1])
+            {
+                if (Moving[2] || Moving[3])
+                    RotateGoal += RotateGoal / 2;
+                else
+                    RotateGoal += 180;
+            }
         }
-        if (Moving[1])
-        {
-            if (Moving[2])
-                moveDir = MoveDir.BackLeft;
-            else if (Moving[3])
-                moveDir = MoveDir.BackRight;
-            else
-                moveDir = MoveDir.Back;
-        }
+        return RotateGoal;
     }
 
     private void gravity()
