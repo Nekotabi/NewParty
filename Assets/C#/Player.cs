@@ -11,12 +11,16 @@ public class Player : MonoBehaviour
         Walking,
         Running,
         Jumping,
+        Landing,
+        Wince,
+        Damaged,
+        Death,
     }
     private State state;
 
     private Rigidbody rb;
     private Transform MyTrans;
-    private Vector3 velocity;
+    private Vector3 velocity, HitPlace;
     private float MoveSpeed = 0.0f, MyRot = 0.0f, Speed = 10.0f;
     private bool IsJump = false, IsDash = false;
     public bool MoveFreeze = false;
@@ -35,41 +39,52 @@ public class Player : MonoBehaviour
     {
         velocity = Vector3.zero;    //velocity初期化
 
-        if (Input.GetKey(KeyCode.LeftShift))//ダッシュ判定
+        if (Input.GetKeyDown(KeyCode.Escape))   //ポーズ用(仮)
         {
-            IsDash = true;
-            MoveSpeed = Speed * 1.50f * Time.deltaTime;
-        }
-        else
-        {
-            IsDash = false;
-            MoveSpeed = Speed * Time.deltaTime;
+            if (MoveFreeze)
+                MoveFreeze = false;
+            else
+                MoveFreeze = true;
         }
 
-        //前後左右
-        if (Input.GetKey(KeyCode.W))//前
+        if (!MoveFreeze)
         {
-            velocity.x += MoveSpeed;
-        }
-        if (Input.GetKey(KeyCode.S))//後
-        {
-            velocity.x -= MoveSpeed;
-        }
-        if (Input.GetKey(KeyCode.A))//左
-        {
-            velocity.z += MoveSpeed;
-        }
-        if (Input.GetKey(KeyCode.D))//右
-        {
-            velocity.z -= MoveSpeed;
-        }
-        //ジャンプ
-        if (Input.GetKey(KeyCode.Space))
-        {
-            if (!IsJump)
+            if (Input.GetKey(KeyCode.LeftShift))//ダッシュ判定
             {
-                IsJump = true;
-                rb.AddForce(0, JumpPower, 0);
+                IsDash = true;
+                MoveSpeed = Speed * 1.50f * Time.deltaTime;
+            }
+            else
+            {
+                IsDash = false;
+                MoveSpeed = Speed * Time.deltaTime;
+            }
+
+            //前後左右
+            if (Input.GetKey(KeyCode.W))//前
+            {
+                velocity.x += MoveSpeed;
+            }
+            if (Input.GetKey(KeyCode.S))//後
+            {
+                velocity.x -= MoveSpeed;
+            }
+            if (Input.GetKey(KeyCode.A))//左
+            {
+                velocity.z += MoveSpeed;
+            }
+            if (Input.GetKey(KeyCode.D))//右
+            {
+                velocity.z -= MoveSpeed;
+            }
+            //ジャンプ
+            if (Input.GetKey(KeyCode.Space))
+            {
+                if (!IsJump)
+                {
+                    IsJump = true;
+                    rb.AddForce(0, JumpPower, 0);
+                }
             }
         }
 
@@ -98,6 +113,12 @@ public class Player : MonoBehaviour
     /// </summary>
     private void AnimCheck()
     {
+        //ノックバック処理
+        if (state == State.Wince)
+        {
+            Wince();
+        }
+
         if (IsJump)
             state = State.Jumping;
         else if (IsDash)
@@ -123,12 +144,29 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void Wince()
+    {
+        velocity *= -1;
+        MoveFreeze = true;  //動きを止める
+
+        for(float i = 0.0f; i < 0.4f;)  //アニメーション終わるまで待つ
+        {
+            i += Time.deltaTime;
+        }
+        MoveFreeze = false;
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         switch (collision.gameObject.tag)
         {
             case "Ground":
                 IsJump = false;
+                state = State.Landing;
+                break;
+            case "NormalWall":
+                state = State.Wince;
+                HitPlace = collision.transform.position;
                 break;
         }
     }
