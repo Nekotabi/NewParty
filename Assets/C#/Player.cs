@@ -19,6 +19,8 @@ public class Player : MonoBehaviour
     private Vector3 velocity;
     private float MoveSpeed = 0.0f, MyRot = 0.0f, Speed = 10.0f;
     private bool IsJump = false, IsDash = false;
+    public bool MoveFreeze = false;
+    public float JumpPower = 0.0f, weight;
     #endregion
 
     void Start()
@@ -62,9 +64,13 @@ public class Player : MonoBehaviour
             velocity.z -= MoveSpeed;
         }
         //ジャンプ
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKey(KeyCode.Space))
         {
-            IsJump = true;
+            if (!IsJump)
+            {
+                IsJump = true;
+                rb.AddForce(0, JumpPower, 0);
+            }
         }
 
         //移動処理
@@ -79,7 +85,6 @@ public class Player : MonoBehaviour
 
         //アニメーション処理
         AnimCheck();
-        Debug.Log(state);
     }
 
     private void FixedUpdate()
@@ -107,6 +112,24 @@ public class Player : MonoBehaviour
 
     private void gravity()
     {
+        if(MyTrans.position.y < -50.0f)//保険
+        {
+            MyTrans.position = new Vector3(0, 20, 0);
+        }
 
+        if (IsJump)
+        {
+            rb.AddForce(0, -weight, 0);
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        switch (collision.gameObject.tag)
+        {
+            case "Ground":
+                IsJump = false;
+                break;
+        }
     }
 }
