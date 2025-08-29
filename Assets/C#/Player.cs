@@ -20,11 +20,13 @@ public class Player : MonoBehaviour
 
     private Rigidbody rb;
     private Transform MyTrans;
-    private Vector3 velocity, HitPlace;
-    private float MoveSpeed = 0.0f, MyRot = 0.0f, Speed = 10.0f;
+    private Vector3 velocity, FirstMousePos, Angle;
+    private Animator anim;
+
+    private float MyRot = 0.0f, JumpPower = 500.0f, weight = 20.0f;
+    private float[] Speeds = new float[3] {2.0f, 2.0f, 4.0f};   //MoveSpeed, MinSpeed, MaxSpeed
     private bool IsJump = false, IsDash = false;
     public bool MoveFreeze = false;
-    public float JumpPower = 0.0f, weight;
     #endregion
 
     void Start()
@@ -32,12 +34,15 @@ public class Player : MonoBehaviour
         MyTrans = this.transform;
         MyRot = this.transform.rotation.y;
         rb = GetComponent<Rigidbody>();
+        anim = GetComponent<Animator>();
+        FirstMousePos = Input.mousePosition;
     }
 
     // Update is called once per frame
     void Update()
     {
         velocity = Vector3.zero;    //velocity初期化
+        Angle = Vector3.zero;
 
         if (Input.GetKeyDown(KeyCode.Escape))   //ポーズ用(仮)
         {
@@ -49,34 +54,42 @@ public class Player : MonoBehaviour
 
         if (!MoveFreeze)
         {
+            float RotateSpeed;
             if (Input.GetKey(KeyCode.LeftShift))//ダッシュ判定
             {
                 IsDash = true;
-                MoveSpeed = Speed * 1.50f * Time.deltaTime;
+                RotateSpeed = 10.0f * Time.deltaTime;
+                if (Speeds[0] < Speeds[2])
+                    Speeds[0] += 0.5f * Time.deltaTime;
             }
             else
             {
                 IsDash = false;
-                MoveSpeed = Speed * Time.deltaTime;
+                RotateSpeed = 5.0f * Time.deltaTime;
+                if (Speeds[0] > Speeds[1])
+                    Speeds[0] -= 0.5f * Time.deltaTime;
             }
+
+            float MoveSpeed = Speeds[0] / 100;
 
             //前後左右
             if (Input.GetKey(KeyCode.W))//前
             {
-                velocity.x += MoveSpeed;
+                velocity.z += MoveSpeed;
             }
             if (Input.GetKey(KeyCode.S))//後
             {
-                velocity.x -= MoveSpeed;
+                velocity.z -= MoveSpeed;
             }
             if (Input.GetKey(KeyCode.A))//左
             {
-                velocity.z += MoveSpeed;
+                Angle.y -= RotateSpeed;
             }
             if (Input.GetKey(KeyCode.D))//右
             {
-                velocity.z -= MoveSpeed;
+                Angle.y += RotateSpeed;
             }
+
             //ジャンプ
             if (Input.GetKey(KeyCode.Space))
             {
@@ -84,22 +97,32 @@ public class Player : MonoBehaviour
                 {
                     IsJump = true;
                     rb.AddForce(0, JumpPower, 0);
+                    state = State.Jumping;
                 }
             }
         }
 
         //移動処理
-        if(velocity != Vector3.zero)
-        {
             MyTrans.position += transform.rotation * velocity;
-        }
+            if (IsDash)
+                state = State.Running;
+            else
+                state = State.Walking;
 
         //方向処理
-        MyRot = Input.mousePosition.x;
-        MyTrans.eulerAngles = new Vector3(0, MyRot, 0);
+        MyTrans.eulerAngles += Angle; 
 
-        //アニメーション処理
-        AnimCheck();
+        //アニメーション系
+        if (!Input.anyKey)//待機
+        {
+            state = State.Idle;
+        }
+
+        if (state == State.Wince)//ひるみ
+        {
+            Wince();
+        }
+        AnimChanger(state);
     }
 
     private void FixedUpdate()
@@ -107,30 +130,18 @@ public class Player : MonoBehaviour
         if (IsJump)
             gravity();
     }
-
     /// <summary>
-    ///実行するアニメーションを判定 
+    /// Stateでアニメーションを切り替える
     /// </summary>
-    private void AnimCheck()
+    /// <param name="state">切り替えるもの</param>
+    private void AnimChanger(State state)
     {
-        //ノックバック処理
-        if (state == State.Wince)
-        {
-            Wince();
-        }
-
-        if (IsJump)
-            state = State.Jumping;
-        else if (IsDash)
-            state = State.Running;
-        else
-            state = State.Walking;
-        if (!Input.anyKey)
-        {
-            state = State.Idle;
-        }
+        anim.SetBool("Walking", state == State.Walking);
+        anim.SetBool("Running", state == State.Running);
     }
-
+    /// <summary>
+    /// 重力処理
+    /// </summary>
     private void gravity()
     {
         if(MyTrans.position.y < -50.0f)//保険
@@ -166,7 +177,6 @@ public class Player : MonoBehaviour
                 break;
             case "NormalWall":
                 state = State.Wince;
-                HitPlace = collision.transform.position;
                 break;
         }
     }
