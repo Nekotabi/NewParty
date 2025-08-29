@@ -1,4 +1,5 @@
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -16,10 +17,8 @@ public class Player : MonoBehaviour
     private Rigidbody rb;
     private Transform MyTrans;
     private Vector3 velocity;
-    public float Speed;
-    private float MoveSpeed = 0.0f, RotateGoal = 0.0f, MyRot = 0.0f;
+    private float MoveSpeed = 0.0f, MyRot = 0.0f, Speed = 10.0f;
     private bool IsJump = false, IsDash = false;
-    private bool[] Moving = new bool[4] { false, false, false, false };
     #endregion
 
     void Start()
@@ -37,7 +36,7 @@ public class Player : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftShift))//ダッシュ判定
         {
             IsDash = true;
-            MoveSpeed = Speed * 1.30f * Time.deltaTime;
+            MoveSpeed = Speed * 1.50f * Time.deltaTime;
         }
         else
         {
@@ -48,33 +47,20 @@ public class Player : MonoBehaviour
         //前後左右
         if (Input.GetKey(KeyCode.W))//前
         {
-            velocity.z += MoveSpeed;
-            Moving[0] = true;
+            velocity.x += MoveSpeed;
         }
-        else
-            Moving[0] = false;
         if (Input.GetKey(KeyCode.S))//後
         {
-            velocity.z -= MoveSpeed;
-            Moving[1] = true;
+            velocity.x -= MoveSpeed;
         }
-        else
-            Moving[1] = false;
         if (Input.GetKey(KeyCode.A))//左
         {
-            velocity.x -= MoveSpeed;
-            Moving[2] = true;
+            velocity.z += MoveSpeed;
         }
-        else
-            Moving[2] = false;
         if (Input.GetKey(KeyCode.D))//右
         {
-            velocity.x += MoveSpeed;
-            Moving[3] = true;
+            velocity.z -= MoveSpeed;
         }
-        else
-            Moving[3] = false;
-
         //ジャンプ
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -82,11 +68,18 @@ public class Player : MonoBehaviour
         }
 
         //移動処理
-        Debug.Log(RotateCheck());
-        MyTrans.position += velocity;
+        if(velocity != Vector3.zero)
+        {
+            MyTrans.position += transform.rotation * velocity;
+        }
+
+        //方向処理
+        MyRot = Input.mousePosition.x;
+        MyTrans.eulerAngles = new Vector3(0, MyRot, 0);
 
         //アニメーション処理
         AnimCheck();
+        Debug.Log(state);
     }
 
     private void FixedUpdate()
@@ -110,32 +103,6 @@ public class Player : MonoBehaviour
         {
             state = State.Idle;
         }
-    }
-
-    /// <summary>
-    /// 向きを返す。
-    /// </summary>
-    /// <param name="Movable"></param>
-    private int RotateCheck()
-    {
-        int RotateGoal = 0;
-        if (Moving[2])
-            RotateGoal -= 90;
-        if (Moving[3])
-            RotateGoal += 90;
-        if (!Moving[0] || !Moving[1])
-        {
-            if (Moving[0])
-                RotateGoal /= 2;
-            if (Moving[1])
-            {
-                if (Moving[2] || Moving[3])
-                    RotateGoal += RotateGoal / 2;
-                else
-                    RotateGoal += 180;
-            }
-        }
-        return RotateGoal;
     }
 
     private void gravity()
