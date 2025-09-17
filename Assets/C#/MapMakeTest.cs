@@ -6,15 +6,11 @@ public class MapMakeTest : MonoBehaviour
 {
     public int MapLength, MapWidth;
     public List<GameObject> Grounds = new();
+
+    private int SOSCount = 0;
+    private bool NotInfinit = true;
     void Start()
     {
-        for(int i = 0; i < MapLength - 1; i++)
-        {
-            for(int j = 0; j < MapWidth - 1; i++)
-            {
-                int a = Random.Range(0, 2);
-                Debug.Log(Instantiate(Grounds[a], new Vector3(i * 10, 0, 0), Quaternion.identity).name);
-            }
-        }
+
     }
 }
