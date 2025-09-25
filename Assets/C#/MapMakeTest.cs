@@ -15,6 +15,7 @@ public class MapMakeTest : MonoBehaviour
     private List<TextAsset> CSVList = new();//CSVの保管用
     private List<List<List<string>>> FieldFile = new(); //生成パターン保存用
     private List<List<List<int>>> MakeIt = new();   //生成補助パターン保存用
+    private int FloorNum = 0;//地面構造を変える用(2パターン)
     #endregion
 
     void Awake()
@@ -41,6 +42,7 @@ public class MapMakeTest : MonoBehaviour
     {
         for (int y = 0; y < FieldFile.Count; y++)
         {
+            FloorNum = y % 2;
             for (int x = 0; x < FieldFile[y].Count; x++)
             {
                 for (int z = 0; z < FieldFile[y][x].Count; z++)
@@ -173,41 +175,47 @@ public class MapMakeTest : MonoBehaviour
     /// <param name="Direct">方向制御用</param>
     private void MakeObject(int CreateNum, int CreateMob, string OriginNum, Vector3Int MakePos, string[] Direct)
     {
-        int x = MakePos.x, y = MakePos.y, z = MakePos.z;
+        int x = MakePos.z, y = MakePos.y, z = MakePos.x;
         switch (CreateNum)  //ユニット生成
         {
             case 0://null
                 break;
             case 1://ルーム
+                Instantiate(Grounds[FloorNum], new Vector3(x * 4.2f, y, z * 4.6f), Quaternion.identity);//床生成
+                for(int i = 0; i < Direct.Length; i++)//壁生成
+                {
+                    if (Direct[i] == OriginNum)
+                        break;
+                }
                 break;
-            case 2://X軸トンネル
+            //case 2://X軸トンネル
 
-                if (Direct[2] == OriginNum)
-                { break; }
-                else if (Direct[3] == OriginNum)
-                {
-                    Instantiate(Tunnels[0], new Vector3(x, y, z), Quaternion.Euler(0, 90.0f, 0));
-                    break;
-                }
-                else
-                {
-                    Instantiate(Tunnels[1], new Vector3(x, y, z), Quaternion.Euler(0, 90.0f, 0));
-                    break;
-                }
+            //    if (Direct[2] == OriginNum)
+            //    { break; }
+            //    else if (Direct[3] == OriginNum)
+            //    {
+            //        Instantiate(Tunnels[0], new Vector3(x, y, z), Quaternion.Euler(0, 90.0f, 0));
+            //        break;
+            //    }
+            //    else
+            //    {
+            //        Instantiate(Tunnels[1], new Vector3(x, y, z), Quaternion.Euler(0, 90.0f, 0));
+            //        break;
+            //    }
 
-            case 3://Z軸トンネル
-                if (Direct[0] == OriginNum)
-                { break; }
-                else if (Direct[2] == OriginNum)
-                {
-                    Instantiate(Tunnels[0], new Vector3(x, y, z), Quaternion.identity);
-                    break;
-                }
-                else
-                {
-                    Instantiate(Tunnels[1], new Vector3(x, y, z), Quaternion.identity);
-                    break;
-                }
+            //case 3://Z軸トンネル
+            //    if (Direct[0] == OriginNum)
+            //    { break; }
+            //    else if (Direct[2] == OriginNum)
+            //    {
+            //        Instantiate(Tunnels[0], new Vector3(x, y, z), Quaternion.identity);
+            //        break;
+            //    }
+            //    else
+            //    {
+            //        Instantiate(Tunnels[1], new Vector3(x, y, z), Quaternion.identity);
+            //        break;
+            //    }
 
             case 4://ルームSub
                 break;
