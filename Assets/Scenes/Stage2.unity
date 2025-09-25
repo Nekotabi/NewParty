@@ -403,7 +403,7 @@ Transform:
   m_GameObject: {fileID: 1526967685}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.0267406, y: 0.18242228, z: 0.017274294}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -422,7 +422,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   StageNum: 1
-  Grounds: []
+  Grounds:
+  - {fileID: 3891908200146587722, guid: 732f901be6361bd45989cb8196f683d2, type: 3}
+  - {fileID: 1502038320044356790, guid: dd67638cac61f0241b71c5e56e9738c8, type: 3}
+  Walls:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  Tunnels:
+  - {fileID: 7118524136086243092, guid: c7bdd8225f1ccb540bff61572ee22661, type: 3}
+  - {fileID: 7283678603819590305, guid: 2f4515f82c4e94c438a78514cde6d1f6, type: 3}
+  - {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
