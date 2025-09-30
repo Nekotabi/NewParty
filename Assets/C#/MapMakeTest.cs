@@ -18,7 +18,7 @@ public class MapMakeTest : MonoBehaviour
     private List<List<List<string>>> FieldFile = new(); //生成パターン保存用
     private List<List<List<int>>> MakeIt = new();   //生成補助パターン保存用
     private int FloorNum = 0;//地面構造を変える用(2パターン)
-    private Vector3 Cor = new Vector3(4.2f, 1.0f, 4.2f); //生成の補正
+    private Vector3 Cor = new Vector3(4.2f, 4.4f, 4.2f); //生成の補正
     #endregion
 
     void Awake()
@@ -100,19 +100,13 @@ public class MapMakeTest : MonoBehaviour
             {
                 if (i != 0)
                 {
-                    if (MapDatas[i][j] == MapDatas[i - 1][j])
-                    {
-                        LogNums[i][j] += 1;
-                        LogNums[i - 1][j] += 4;
-                    }
+                    LogNums[i][j] += 1;
+                    LogNums[i - 1][j] += 4;
                 }
                 if (j != 0)
                 {
-                    if (MapDatas[i][j] == MapDatas[i][j - 1])
-                    {
-                        LogNums[i][j] += 2;
-                        LogNums[i][j - 1] += 8;
-                    }
+                    LogNums[i][j] += 2;
+                    LogNums[i][j - 1] += 8;
                 }
             }
         }
@@ -131,87 +125,85 @@ public class MapMakeTest : MonoBehaviour
         string[] StrNums = OriginNum.Split("_");//"_"で主番号と付番号を分解
         int LogNum = MakeIt[FilePass.y][FilePass.x][FilePass.z];//生成中のパスを格納
         string[] Direct = DirectDistinction(LogNum, FilePass);//↑の周囲のオブジェクトを検索
-        for(int i = 0; i < Direct.Length; i++)
-            Debug.Log(Direct[1]);
 
         int MobNum = 0;//オブジェの数値を保管する。0は何もなし。
         if (StrNums.Length == 2)
             MobNum = int.Parse(StrNums[1]);
 
-        Vector3 CreatePos = new Vector3(FilePass.x * Cor.x, FilePass.y * Cor.y, FilePass.z * -Cor.z);
+        Vector3 CreatePos = new Vector3(FilePass.z * Cor.z, FilePass.y * Cor.y, FilePass.x * -Cor.x);
 
         //生成実行
         int CreateNum = int.Parse(StrNums[0]);
+        string Dir = "";
         Transform FloorTr = null;
-        switch (CreateNum)  //ユニット生成
-        {
-            case 0://null
-                break;
-            case 1://ルーム
-                FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;//床生成
-                for (int i = 0; i < Direct.Length; i++)//壁生成
+            switch (CreateNum)  //ユニット生成
+            {
+                case 0://null
+                    break;
+                case 1://ルーム
+                    FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;//床生成
+                for (int i = 0; i < Direct.Length; i++)
                 {
+                    Dir = Direct[i].Substring(0, 1);//nullはnに、それ以外は主数字になる。
+
                     if (Direct[i] != OriginNum)//同じフロアが面する部分は壁生成から弾く。
                     {
-                        if (Direct[i] == "null")//何もなかったら普通の壁を作る。
+                        if (Direct[i] == "n" || Dir == "0")//nullか0なら並壁
                         {
                             CreateWall(FloorTr, CreatePos, i, true);
                         }
-                        else//フロア以外が隣り合っていたらゲート型の壁を作る。
+                        else if ((i < 2 && Dir == "3") || (i >= 2 && Dir == "4"))//上下に横軸が付くか、左右に縦軸が付いたら並壁
+                        {
+                            CreateWall(FloorTr, CreatePos, i, false);
+                        }
+                        else//それ以外は穴あき壁
                         {
                             CreateWall(FloorTr, CreatePos, i, false);
                         }
                     }
                 }
-                break;
+                    Instantiate(Walls[0], new Vector3(CreatePos.x, CreatePos.y += Cor.y - 0.2f, CreatePos.z + Cor.z),
+                        Quaternion.Euler(new Vector3(-90, 0, 0))).transform.SetParent(FloorTr);
+                    break;
 
-            case 2://ルームSub
-                FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;//床生成
-                for (int i = 0; i < Direct.Length; i++)//壁生成
+                case 2://ルームSub
+                    FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;
+                for (int i = 0; i < Direct.Length; i++)
                 {
-                    if (Direct[i] != OriginNum)//同じフロアが面する部分は壁生成から弾く。
+                    Dir = Direct[i].Substring(0, 1);//nullはnに、それ以外は主数字になる。
+
+                    if (Direct[i] != OriginNum)
                     {
-                        if (Direct[i] != "null")//↑以外に何かあれば
+                        if (Direct[i] == "n" || Dir == "0")
                         {
                             CreateWall(FloorTr, CreatePos, i, false);
                         }
-                        else//何もなければ普通の壁
+                        else if ((i < 2 && Dir == "3") || (i >= 2 && Dir == "4"))
+                        {
+                            CreateWall(FloorTr, CreatePos, i, false);
+                        }
+                        else
                         {
                             CreateWall(FloorTr, CreatePos, i, true);
                         }
                     }
                 }
-                break;
+                    Instantiate(Walls[0], new Vector3(CreatePos.x, CreatePos.y + (Cor.y - 0.2f), CreatePos.z + Cor.z),
+                        Quaternion.Euler(new Vector3(-90, 0, 0))).transform.SetParent(FloorTr);
+                    break;
 
-                /*case 3://X軸トンネル
-
-                    if (Direct[2] == OriginNum)
-                    { break; }
-                    else if (Direct[3] == OriginNum)
-                    {
-                        Instantiate(Tunnels[0], , Quaternion.Euler(0, 90.0f, 0));
-                        break;
-                    }
-                    else
-                    {
-                        Instantiate(Tunnels[1], , Quaternion.Euler(0, 90.0f, 0));
-                        break;
-                    }
+                case 3://X軸トンネル
+                    CreatePos.y += 1.0f;
+                    FloorTr = Instantiate(Tunnels[1], CreatePos, Quaternion.Euler(0.0f, 90.0f, 0.0f)).transform;
+                    FloorTr.localScale = new Vector3(2.0f, 2.0f, 2.0f);
+                    break;
 
                 case 4://Z軸トンネル
-                    if (Direct[0] == OriginNum)
-                    { break; }
-                    else if (Direct[2] == OriginNum)
-                    {
-                        Instantiate(Tunnels[0], new Vector3(x, y, z), Quaternion.identity);
-                        break;
-                    }
-                    else
-                    {
-                        Instantiate(Tunnels[1], new Vector3(x, y, z), Quaternion.identity);
-                        break;
-                    }*/
-        }
+                    CreatePos.y += 1.0f;
+                    FloorTr = Instantiate(Tunnels[1], CreatePos, Quaternion.identity).transform;
+                    FloorTr.localScale = new Vector3(2.0f, 2.0f, 2.0f);
+                    break;
+            }
     }
     /// <summary>
     /// 上下左右の順の隣り合ったデータを返す。
