@@ -20,10 +20,12 @@ public class MapMakeTest : MonoBehaviour
     private List<List<List<int>>> MakeIt = new();   //生成補助パターン保存用
     private int FloorNum = 0;//地面構造を変える用(2パターン)
     private Vector3 Cor = new Vector3(4.2f, 4.4f, 4.2f); //生成の補正
+    private GameObject MarkerParent;
     #endregion
 
     void Awake()
     {
+        MarkerParent = GameObject.Find("Markers");
         //CSV系
         if (StageNum != 0)
         {
@@ -134,8 +136,8 @@ public class MapMakeTest : MonoBehaviour
         Vector3 CreatePos = new Vector3(FilePass.z * Cor.z, FilePass.y * Cor.y, FilePass.x * -Cor.x);
         Transform FloorTr = null;
 
-        //生成実行
-        int CreateNum = int.Parse(StrNums[0]);
+    //生成実行
+    int CreateNum = int.Parse(StrNums[0]);
         string Dir = "";
         GameObject FloorObj = null;
         switch (CreateNum)  //ユニット生成
@@ -143,6 +145,33 @@ public class MapMakeTest : MonoBehaviour
             case 0://null
                 break;
             case 1://ルーム
+                FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;//床生成
+                for (int i = 0; i < Direct.Length; i++)
+                {
+                    Dir = Direct[i].Substring(0, 1);//nullはnに、それ以外は主数字になる。
+
+                    if (Dir != StrNums[0])//同じフロアが面する部分は壁生成から弾く。
+                    {
+                        if (Dir == "n" || Dir == "0")//nullか0なら並壁
+                        {
+                            CreateWall(FloorTr, CreatePos, i, true);
+                        }
+                        else if ((i < 2 && Dir == "3") || (i >= 2 && Dir == "4"))//上下に横軸が付くか、左右に縦軸が付いたら並壁
+                        {
+                            CreateWall(FloorTr, CreatePos, i, false);
+                        }
+                        else//それ以外は穴あき壁
+                        {
+                            CreateWall(FloorTr, CreatePos, i, false);
+                        }
+                    }
+                }
+                //天井をセット
+                FloorObj = Instantiate(Walls[0], new Vector3(CreatePos.x, CreatePos.y += Cor.y - 0.2f, CreatePos.z + (Cor.z / 2)), Quaternion.Euler(new Vector3(-90, 0, 0)));
+                FloorObj.transform.SetParent(FloorTr);
+                break;
+
+            case 2://ルームSub
                 FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;//床生成
                 for (int i = 0; i < Direct.Length; i++)
                 {
@@ -164,32 +193,7 @@ public class MapMakeTest : MonoBehaviour
                         }
                     }
                 }
-                FloorObj = Instantiate(Walls[0], new Vector3(CreatePos.x, CreatePos.y += Cor.y - 0.2f, CreatePos.z + (Cor.z / 2)), Quaternion.Euler(new Vector3(-90, 0, 0)));
-                FloorObj.transform.SetParent(FloorTr);
-                break;
-
-            case 2://ルームSub
-                FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;
-                for (int i = 0; i < Direct.Length; i++)
-                {
-                    Dir = Direct[i].Substring(0, 1);//nullはnに、それ以外は主数字になる。
-
-                    if (Direct[i] != OriginNum)
-                    {
-                        if (Dir == "n" || Dir == "0")
-                        {
-                            CreateWall(FloorTr, CreatePos, i, false);
-                        }
-                        else if ((i < 2 && Dir == "3") || (i >= 2 && Dir == "4"))
-                        {
-                            CreateWall(FloorTr, CreatePos, i, false);
-                        }
-                        else
-                        {
-                            CreateWall(FloorTr, CreatePos, i, true);
-                        }
-                    }
-                }
+                //天井をセット
                 FloorObj = Instantiate(Walls[0], new Vector3(CreatePos.x, CreatePos.y += Cor.y - 0.2f, CreatePos.z + (Cor.z / 2)), Quaternion.Euler(new Vector3(-90, 0, 0)));
                 FloorObj.transform.SetParent(FloorTr);
                 break;
@@ -207,21 +211,39 @@ public class MapMakeTest : MonoBehaviour
                 break;
         }
 
+        Vector3 ExitVect = Vector3.zero;
         switch (MobNum)//生成物調整
         {
             case 0://null
                 break;
             case 1://アイテムポイント
-                Instantiate(Mobs[0], CreatePos, Quaternion.identity).transform.SetParent(FloorTr);
+                Instantiate(Mobs[1], CreatePos, Quaternion.identity).transform.SetParent(FloorTr);
                 break;
             case 2://敵のスポーン位置
-                Instantiate(Mobs[0], CreatePos, Quaternion.identity).transform.SetParent(FloorTr);
+                Instantiate(Mobs[2], CreatePos, Quaternion.identity).transform.SetParent(FloorTr);
                 break;
             case 3://Playerの初期位置
-
                 break;
-            case 4://出口
-                Instantiate(Mobs[0], CreatePos, Quaternion.identity).transform.SetParent(FloorTr);
+            case 4://出口(1方向だけが同じルームの前提)
+                for(int i = 0; i < Direct.Length; i++)
+                {
+                    if (Direct[i].Substring(0,1) == StrNums[0])
+                        switch (i)
+                        {
+                            case 0:
+                                ExitVect = new Vector3(0.0f, 0.0f, 0.0f); break;
+                            case 1:
+                                ExitVect = new Vector3(0.0f, 180.0f, 0.0f); break;
+                            case 2:
+                                ExitVect = new Vector3(0.0f, 270.0f, 0.0f); break;
+                            case 3:
+                                ExitVect = new Vector3(0.0f, 90.0f, 0.0f); break;
+                        }
+                }
+                Instantiate(Mobs[3], CreatePos, Quaternion.Euler(ExitVect)).transform.SetParent(FloorTr);
+                break;
+            case 5://トンネルマーカー
+                Instantiate(Mobs[0], CreatePos, Quaternion.identity).transform.SetParent(MarkerParent.transform);
                 break;
         }
     }

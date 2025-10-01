@@ -377,6 +377,37 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!1 &1056003770
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1056003771}
+  m_Layer: 0
+  m_Name: Markers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1056003771
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1056003770}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.245731, y: -21.640568, z: 2.8783643}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1526967685
 GameObject:
   m_ObjectHideFlags: 0
@@ -434,6 +465,11 @@ MonoBehaviour:
   - {fileID: 7118524136086243092, guid: c7bdd8225f1ccb540bff61572ee22661, type: 3}
   - {fileID: 7283678603819590305, guid: 2f4515f82c4e94c438a78514cde6d1f6, type: 3}
   - {fileID: 8578657011443779778, guid: 744e9159d7ee8a34ea7617aea838815b, type: 3}
+  Mobs:
+  - {fileID: 5492124832287255307, guid: 25da332526d72b9489252ca0e36e7e20, type: 3}
+  - {fileID: 0}
+  - {fileID: 6535357649546523934, guid: 0a38829f7a203654fa4d5c24ebc0e833, type: 3}
+  - {fileID: 6535357649546523934, guid: 0a38829f7a203654fa4d5c24ebc0e833, type: 3}
   SuccessMakeMap: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
@@ -442,3 +478,4 @@ SceneRoots:
   - {fileID: 85750278}
   - {fileID: 7229553}
   - {fileID: 1526967686}
+  - {fileID: 1056003771}

@@ -52,7 +52,7 @@ public class Player : MonoBehaviour
                 MoveFreeze = true;
         }
 
-        if (!MoveFreeze)
+        if (!MoveFreeze || state != State.Death)
         {
             float RotateSpeed;
             if (Input.GetKey(KeyCode.LeftShift))//ダッシュ判定
@@ -138,6 +138,7 @@ public class Player : MonoBehaviour
     {
         anim.SetBool("Walking", state == State.Walking);
         anim.SetBool("Running", state == State.Running);
+        anim.SetBool("Death", state == State.Death);
     }
     /// <summary>
     /// 重力処理
@@ -177,6 +178,9 @@ public class Player : MonoBehaviour
                 break;
             case "NormalWall":
                 state = State.Wince;
+                break;
+            case "Enemy":
+                state = State.Death;
                 break;
         }
     }
