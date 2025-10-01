@@ -10,6 +10,7 @@ public class MapMakeTest : MonoBehaviour
     [Tooltip("地面")] public List<GameObject> Grounds;
     [Tooltip("壁・天井")] public List<GameObject> Walls;
     [Tooltip("トンネル")] public List<GameObject> Tunnels;
+    [Tooltip("その他オブジェクト")]public List<GameObject> Mobs;
 
     public bool SuccessMakeMap;
     #endregion
@@ -131,24 +132,25 @@ public class MapMakeTest : MonoBehaviour
             MobNum = int.Parse(StrNums[1]);
 
         Vector3 CreatePos = new Vector3(FilePass.z * Cor.z, FilePass.y * Cor.y, FilePass.x * -Cor.x);
+        Transform FloorTr = null;
 
         //生成実行
         int CreateNum = int.Parse(StrNums[0]);
         string Dir = "";
-        Transform FloorTr = null;
-            switch (CreateNum)  //ユニット生成
-            {
-                case 0://null
-                    break;
-                case 1://ルーム
-                    FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;//床生成
+        GameObject FloorObj = null;
+        switch (CreateNum)  //ユニット生成
+        {
+            case 0://null
+                break;
+            case 1://ルーム
+                FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;//床生成
                 for (int i = 0; i < Direct.Length; i++)
                 {
                     Dir = Direct[i].Substring(0, 1);//nullはnに、それ以外は主数字になる。
 
                     if (Direct[i] != OriginNum)//同じフロアが面する部分は壁生成から弾く。
                     {
-                        if (Direct[i] == "n" || Dir == "0")//nullか0なら並壁
+                        if (Dir == "n" || Dir == "0")//nullか0なら並壁
                         {
                             CreateWall(FloorTr, CreatePos, i, true);
                         }
@@ -162,19 +164,19 @@ public class MapMakeTest : MonoBehaviour
                         }
                     }
                 }
-                    Instantiate(Walls[0], new Vector3(CreatePos.x, CreatePos.y += Cor.y - 0.2f, CreatePos.z + Cor.z),
-                        Quaternion.Euler(new Vector3(-90, 0, 0))).transform.SetParent(FloorTr);
-                    break;
+                FloorObj = Instantiate(Walls[0], new Vector3(CreatePos.x, CreatePos.y += Cor.y - 0.2f, CreatePos.z + (Cor.z / 2)), Quaternion.Euler(new Vector3(-90, 0, 0)));
+                FloorObj.transform.SetParent(FloorTr);
+                break;
 
-                case 2://ルームSub
-                    FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;
+            case 2://ルームSub
+                FloorTr = Instantiate(Grounds[FloorNum], CreatePos, Quaternion.identity).transform;
                 for (int i = 0; i < Direct.Length; i++)
                 {
                     Dir = Direct[i].Substring(0, 1);//nullはnに、それ以外は主数字になる。
 
                     if (Direct[i] != OriginNum)
                     {
-                        if (Direct[i] == "n" || Dir == "0")
+                        if (Dir == "n" || Dir == "0")
                         {
                             CreateWall(FloorTr, CreatePos, i, false);
                         }
@@ -188,22 +190,40 @@ public class MapMakeTest : MonoBehaviour
                         }
                     }
                 }
-                    Instantiate(Walls[0], new Vector3(CreatePos.x, CreatePos.y + (Cor.y - 0.2f), CreatePos.z + Cor.z),
-                        Quaternion.Euler(new Vector3(-90, 0, 0))).transform.SetParent(FloorTr);
-                    break;
+                FloorObj = Instantiate(Walls[0], new Vector3(CreatePos.x, CreatePos.y += Cor.y - 0.2f, CreatePos.z + (Cor.z / 2)), Quaternion.Euler(new Vector3(-90, 0, 0)));
+                FloorObj.transform.SetParent(FloorTr);
+                break;
 
-                case 3://X軸トンネル
-                    CreatePos.y += 1.0f;
-                    FloorTr = Instantiate(Tunnels[1], CreatePos, Quaternion.Euler(0.0f, 90.0f, 0.0f)).transform;
-                    FloorTr.localScale = new Vector3(2.0f, 2.0f, 2.0f);
-                    break;
+            case 3://X軸トンネル
+                CreatePos.y += 1.0f;
+                FloorTr = Instantiate(Tunnels[1], CreatePos, Quaternion.Euler(0.0f, 90.0f, 0.0f)).transform;
+                FloorTr.localScale = new Vector3(2.0f, 2.0f, 2.0f);
+                break;
 
-                case 4://Z軸トンネル
-                    CreatePos.y += 1.0f;
-                    FloorTr = Instantiate(Tunnels[1], CreatePos, Quaternion.identity).transform;
-                    FloorTr.localScale = new Vector3(2.0f, 2.0f, 2.0f);
-                    break;
-            }
+            case 4://Z軸トンネル
+                CreatePos.y += 1.0f;
+                FloorTr = Instantiate(Tunnels[1], CreatePos, Quaternion.identity).transform;
+                FloorTr.localScale = new Vector3(2.0f, 2.0f, 2.0f);
+                break;
+        }
+
+        switch (MobNum)//生成物調整
+        {
+            case 0://null
+                break;
+            case 1://アイテムポイント
+                Instantiate(Mobs[0], CreatePos, Quaternion.identity).transform.SetParent(FloorTr);
+                break;
+            case 2://敵のスポーン位置
+                Instantiate(Mobs[0], CreatePos, Quaternion.identity).transform.SetParent(FloorTr);
+                break;
+            case 3://Playerの初期位置
+
+                break;
+            case 4://出口
+                Instantiate(Mobs[0], CreatePos, Quaternion.identity).transform.SetParent(FloorTr);
+                break;
+        }
     }
     /// <summary>
     /// 上下左右の順の隣り合ったデータを返す。
@@ -270,4 +290,33 @@ public class MapMakeTest : MonoBehaviour
         GameObject WallObj = Instantiate(MakeWall, _CreatePos, Quaternion.Euler(WallDirection));
         WallObj.transform.SetParent(FloorTr);
     }
+
+    /// <summary>
+    /// トンネルが曲がるかどうかを判別する。0はfalse, 1は上か左へ、2は下か右へ。
+    /// </summary>
+    /// <param name="Directs">InDirect</param>
+    /// <param name="IsX">判定はX軸か？(falseはZ軸になる)</param>
+    /// <returns></returns>
+    /*private int CheckCorner(string[] Directs, bool IsX)
+    {
+        int TurnNum = 0;//特に無ければ0が帰る。
+
+        for(int i = 0; i < Directs.Length; i++)
+        {
+            int CheckNum = int.Parse(Directs[i].Substring(0,1));
+            if (IsX && i < 2)//X軸かつ上下判定中か？
+            {
+                if(CheckNum == 4)//Z軸トンネルが側面に当たっているなら曲げる判定を返す。
+                    TurnNum = i;
+            }
+            else if(i >= 2)//Z軸確定かつ左右判定中か？
+            {
+                if(CheckNum == 3)//X軸トンネルが側面に当たっているなら曲げる判定を返す。
+                    TurnNum = i-2;
+            }
+        }
+
+        return TurnNum;
+    }
+    */
 }
