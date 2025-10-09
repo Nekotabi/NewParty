@@ -2,19 +2,17 @@ using UnityEngine;
 
 public class Camera : MonoBehaviour
 {
-    private GameObject PlayerObj;
-    private Transform PlayerPos;
-    private Transform MyPos;
-    private Vector3 Offset;
-    void Start()
-    {   //‚¢‚ë‚¢‚ë’è‹`
-        PlayerObj = transform.parent.gameObject;
-        PlayerPos = PlayerPos.GetComponent<Transform>();
-        MyPos = this.GetComponent<Transform>();
-        Offset = PlayerPos.position - MyPos.position;
+    private Transform PlayerTr;
+    private Vector3 CameraRevision = new Vector3(0.0f, 2.5f, -5.0f);
+
+    private void Start()
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        PlayerTr = player.GetComponent<Transform>();
     }
 
-    void Update()
+    private void Update()
     {
+        this.transform.position = PlayerTr.position + CameraRevision;
     }
 }

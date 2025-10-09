@@ -1,5 +1,3 @@
-using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -23,8 +21,8 @@ public class Player : MonoBehaviour
     private Vector3 velocity, FirstMousePos, Angle;
     private Animator anim;
 
-    private float MyRot = 0.0f, JumpPower = 500.0f, weight = 20.0f;
-    private float[] Speeds = new float[3] {2.0f, 2.0f, 4.0f};   //MoveSpeed, MinSpeed, MaxSpeed
+    private float MyRot = 0.0f, JumpPower = 500.0f, weight = 20.0f, MoveSpeed = 3.0f, RotationSpeed = 360.0f;
+    private float[] Speeds = new float[3] { 2.0f, 2.0f, 4.0f };   //MoveSpeed, MinSpeed, MaxSpeed
     private bool IsJump = false, IsDash = false;
     public bool MoveFreeze = false;
     #endregion
@@ -54,18 +52,13 @@ public class Player : MonoBehaviour
 
         if (!MoveFreeze || state != State.Death)
         {
-            float RotateSpeed;
-            if (Input.GetKey(KeyCode.LeftShift))//ダッシュ判定
+            if (IsDash)//ダッシュ判定
             {
-                IsDash = true;
-                RotateSpeed = 10.0f * Time.deltaTime;
                 if (Speeds[0] < Speeds[2])
                     Speeds[0] += 0.5f * Time.deltaTime;
             }
             else
             {
-                IsDash = false;
-                RotateSpeed = 5.0f * Time.deltaTime;
                 if (Speeds[0] > Speeds[1])
                     Speeds[0] -= 0.5f * Time.deltaTime;
             }
@@ -83,11 +76,18 @@ public class Player : MonoBehaviour
             }
             if (Input.GetKey(KeyCode.A))//左
             {
-                Angle.y -= RotateSpeed;
+                velocity.x -= MoveSpeed;
             }
             if (Input.GetKey(KeyCode.D))//右
             {
-                Angle.y += RotateSpeed;
+                velocity.x += MoveSpeed;
+            }
+            if (Input.GetKeyDown(KeyCode.LeftShift))
+            {
+                if (!IsDash)
+                    IsDash = true;
+                else
+                    IsDash = false;
             }
 
             //ジャンプ
@@ -103,14 +103,20 @@ public class Player : MonoBehaviour
         }
 
         //移動処理
-            MyTrans.position += transform.rotation * velocity;
+        if (velocity != Vector3.zero)
+        {
+            Vector3 direct = velocity.normalized;
+            float Ydiff = Mathf.DeltaAngle(0, Mathf.Atan2(direct.x, direct.z) * Mathf.Rad2Deg);//移動方向をY値の回転値で割り出す
+            Quaternion NowRot = this.transform.rotation;
+            Quaternion TargetRot = Quaternion.Euler(0, Ydiff, 0);
+            MyTrans.rotation = Quaternion.RotateTowards(NowRot, TargetRot, RotationSpeed * Time.deltaTime);
+            MyTrans.position += direct * MoveSpeed * Time.deltaTime;//position更新
+
             if (IsDash)
                 state = State.Running;
             else
                 state = State.Walking;
-
-        //方向処理
-        MyTrans.eulerAngles += Angle; 
+        }
 
         //アニメーション系
         if (!Input.anyKey)//待機
@@ -145,7 +151,7 @@ public class Player : MonoBehaviour
     /// </summary>
     private void gravity()
     {
-        if(MyTrans.position.y < -50.0f)//保険
+        if (MyTrans.position.y < -50.0f)//保険
         {
             MyTrans.position = new Vector3(0, 20, 0);
         }
@@ -161,7 +167,7 @@ public class Player : MonoBehaviour
         velocity *= -1;
         MoveFreeze = true;  //動きを止める
 
-        for(float i = 0.0f; i < 0.4f;)  //アニメーション終わるまで待つ
+        for (float i = 0.0f; i < 0.4f;)  //アニメーション終わるまで待つ
         {
             i += Time.deltaTime;
         }
